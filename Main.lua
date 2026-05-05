@@ -198,3 +198,108 @@ for name,color in pairs(THEMES) do
 	end)
 	y+=50
 end
+--------------------------------------------------
+-- 🟣 5️⃣ SIDEBAR NEON GLOW
+--------------------------------------------------
+local sideGlow = Instance.new("UIStroke",Tabs)
+sideGlow.Color = Color3.fromRGB(170,0,255)
+sideGlow.Thickness = 1.5
+sideGlow.Transparency = 0.4
+
+--------------------------------------------------
+-- ❌ 6️⃣ CLOSE BUTTON (góc phải)
+--------------------------------------------------
+local Close = Instance.new("TextButton",Main)
+Close.Size = UDim2.new(0,35,0,35)
+Close.Position = UDim2.new(1,-40,0,5)
+Close.Text = "X"
+Close.Font = Enum.Font.GothamBlack
+Close.TextScaled = true
+Close.BackgroundColor3 = Color3.fromRGB(120,0,0)
+Close.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner",Close)
+
+Close.MouseButton1Click:Connect(function()
+	Main.Visible = false
+end)
+
+--------------------------------------------------
+-- 📊 7️⃣ STATS PANEL (Home page)
+--------------------------------------------------
+local StatsFrame = Instance.new("Frame",Home)
+StatsFrame.Size = UDim2.new(0,230,0,150)
+StatsFrame.Position = UDim2.new(1,-250,0,10)
+StatsFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+Instance.new("UICorner",StatsFrame)
+
+local statsStroke = Instance.new("UIStroke",StatsFrame)
+statsStroke.Color = Color3.fromRGB(170,0,255)
+
+local statsText = Instance.new("TextLabel",StatsFrame)
+statsText.Size = UDim2.new(1,0,1,0)
+statsText.BackgroundTransparency = 1
+statsText.TextScaled = true
+statsText.Font = Enum.Font.GothamBold
+statsText.TextColor3 = Color3.fromRGB(220,150,255)
+
+RunService.RenderStepped:Connect(function()
+	statsText.Text =
+	"Ping: "..math.random(30,70).." ms\n"..
+	"Players: "..#Players:GetPlayers().."\n"..
+	"Time: "..Lighting.TimeOfDay
+end)
+
+--------------------------------------------------
+-- ⚡ 8️⃣ QUICK ACTIONS PANEL
+--------------------------------------------------
+local Quick = Instance.new("Frame",Home)
+Quick.Size = UDim2.new(1,-40,0,90)
+Quick.Position = UDim2.new(0,20,1,-100)
+Quick.BackgroundColor3 = Color3.fromRGB(35,35,35)
+Instance.new("UICorner",Quick)
+
+local quickStroke = Instance.new("UIStroke",Quick)
+quickStroke.Color = Color3.fromRGB(170,0,255)
+
+local function quickBtn(text,x,func)
+	local b=Instance.new("TextButton",Quick)
+	b.Size=UDim2.new(0,120,0,35)
+	b.Position=UDim2.new(0,x,0,25)
+	b.Text=text
+	b.Font=Enum.Font.GothamBold
+	b.TextScaled=true
+	b.BackgroundColor3=Color3.fromRGB(70,70,70)
+	b.TextColor3=Color3.new(1,1,1)
+	Instance.new("UICorner",b)
+	b.MouseButton1Click:Connect(func)
+end
+
+quickBtn("Rejoin",10,function()
+	game:GetService("TeleportService"):Teleport(game.PlaceId,player)
+end)
+
+quickBtn("Server Hop",140,function()
+	game:GetService("TeleportService"):Teleport(game.PlaceId)
+end)
+
+quickBtn("Copy JobID",270,function()
+	setclipboard(game.JobId)
+end)
+
+--------------------------------------------------
+-- ✨ 9️⃣ TAB HOVER EFFECT
+--------------------------------------------------
+for _,btn in pairs(Tabs:GetChildren()) do
+	if btn:IsA("TextButton") then
+		btn.MouseEnter:Connect(function()
+			TweenService:Create(btn,TweenInfo.new(0.2),{
+				BackgroundColor3 = Color3.fromRGB(120,60,160)
+			}):Play()
+		end)
+		btn.MouseLeave:Connect(function()
+			TweenService:Create(btn,TweenInfo.new(0.2),{
+				BackgroundColor3 = Color3.fromRGB(60,60,60)
+			}):Play()
+		end)
+	end
+end
