@@ -303,3 +303,43 @@ for _,btn in pairs(Tabs:GetChildren()) do
 		end)
 	end
 end
+--------------------------------------------------
+-- 🌈 11️⃣ RGB TITLE EFFECT
+--------------------------------------------------
+spawn(function()
+	while true do
+		for i = 0,255,3 do
+			Title.TextColor3 = Color3.fromHSV(i/255,1,1)
+			wait()
+		end
+	end
+end)
+--------------------------------------------------
+-- 🎵 13️⃣ HUB MUSIC
+--------------------------------------------------
+local music = Instance.new("Sound",gui)
+music.SoundId = "rbxassetid://1843529274"
+music.Volume = 0.3
+music.Looped = true
+music:Play()
+--------------------------------------------------
+-- ✨ 15️⃣ FLOATING PARTICLES
+--------------------------------------------------
+spawn(function()
+	while true do
+		local p = Instance.new("Frame",Main)
+		p.Size = UDim2.new(0,4,0,4)
+		p.BackgroundColor3 = Color3.fromRGB(200,100,255)
+		p.Position = UDim2.new(math.random(),0,1,0)
+		p.BackgroundTransparency = 0.3
+		Instance.new("UICorner",p)
+
+		TweenService:Create(p,TweenInfo.new(3),{
+			Position = UDim2.new(math.random(),0,0,0),
+			BackgroundTransparency = 1
+		}):Play()
+
+		game.Debris:AddItem(p,3)
+		wait(0.15)
+	end
+end)
