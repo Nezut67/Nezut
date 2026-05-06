@@ -1,5 +1,10 @@
 --// 🔥 NEZUT HUB v6 ULTRA UI
 
+-- FIX: chống inject trùng GUI
+if game.CoreGui:FindFirstChild("NezutHub") then
+	game.CoreGui.NezutHub:Destroy()
+end
+
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -15,17 +20,21 @@ local THEMES = {
 	Light = Color3.fromRGB(220,220,220)
 }
 
--- FIX 1: GUI không mất khi chết
+-- FIX: GUI không mất khi chết + không bị nhân đôi
 local gui = Instance.new("ScreenGui")
+gui.Name = "NezutHub"
 gui.ResetOnSpawn = false
-gui.Parent = player.PlayerGui
+gui.Parent = game.CoreGui
 
 --------------------------------------------------
--- 🌫️ 1️⃣ BLUR BACKGROUND (GLASS EFFECT)
+-- 🌫️ BLUR BACKGROUND (FIX chống nhân đôi)
 --------------------------------------------------
-local blur = Instance.new("BlurEffect")
-blur.Size = 12
-blur.Parent = Lighting
+if not Lighting:FindFirstChild("NezutBlur") then
+	local blur = Instance.new("BlurEffect")
+	blur.Name = "NezutBlur"
+	blur.Size = 12
+	blur.Parent = Lighting
+end
 
 --------------------------------------------------
 -- 🔘 FLOATING BUTTON
@@ -53,7 +62,7 @@ Main.Draggable = true
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,14)
 
 --------------------------------------------------
--- 2️⃣ SHADOW SAU HUB
+-- SHADOW
 --------------------------------------------------
 local shadow = Instance.new("ImageLabel",Main)
 shadow.Image = "rbxassetid://1316045217"
@@ -66,7 +75,7 @@ shadow.BackgroundTransparency = 1
 shadow.ZIndex = 0
 
 --------------------------------------------------
--- 3️⃣ NEON STROKE + GRADIENT
+-- NEON STROKE
 --------------------------------------------------
 local stroke = Instance.new("UIStroke",Main)
 stroke.Color = Color3.fromRGB(170,0,255)
@@ -80,21 +89,24 @@ gradient.Color = ColorSequence.new{
 gradient.Rotation = 90
 
 --------------------------------------------------
--- 4️⃣ ANIMATION MỞ HUB
+-- FIX: animation mở + đóng HUB
 --------------------------------------------------
 Toggle.MouseButton1Click:Connect(function()
-	Main.Visible = not Main.Visible
 	if Main.Visible then
-		TweenService:Create(
-			Main,
+		TweenService:Create(Main,TweenInfo.new(0.25),
+			{Size = UDim2.new(0,0,0,0)}):Play()
+		task.wait(0.25)
+		Main.Visible = false
+	else
+		Main.Visible = true
+		TweenService:Create(Main,
 			TweenInfo.new(0.45,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
-			{Size = UDim2.new(0,550,0,380)}
-		):Play()
+			{Size = UDim2.new(0,550,0,380)}):Play()
 	end
 end)
 
 --------------------------------------------------
--- 🔥 TITLE NEON FONT
+-- TITLE
 --------------------------------------------------
 local Title = Instance.new("TextLabel",Main)
 Title.Size = UDim2.new(1,0,0,40)
@@ -169,7 +181,7 @@ local function hum()
 end
 
 --------------------------------------------------
--- HOME PAGE FPS
+-- FIX: FPS tối ưu (không ăn CPU)
 --------------------------------------------------
 local label=Instance.new("TextLabel",Home)
 label.Size=UDim2.new(1,0,0,100)
@@ -178,10 +190,12 @@ label.TextScaled=true
 label.Font=Enum.Font.GothamBold
 label.TextColor3=Color3.fromRGB(220,150,255)
 
--- FIX 2: FPS đúng & không tụt FPS
-RunService.RenderStepped:Connect(function(dt)
-	local fps=math.floor(1/dt)
-	label.Text="Welcome "..player.Name.."\\nFPS: "..fps
+task.spawn(function()
+	while true do
+		local fps = math.floor(1/RunService.RenderStepped:Wait())
+		label.Text="Welcome "..player.Name.."\\nFPS: "..fps
+		task.wait(0.5)
+	end
 end)
 
 -- PLAYER PAGE
@@ -203,7 +217,7 @@ for name,color in pairs(THEMES) do
 end
 
 --------------------------------------------------
--- 📊 STATS PANEL
+-- STATS PANEL (GIỮ NGUYÊN)
 --------------------------------------------------
 local StatsFrame = Instance.new("Frame",Home)
 StatsFrame.Size = UDim2.new(0,230,0,150)
@@ -218,13 +232,86 @@ statsText.TextScaled = true
 statsText.Font = Enum.Font.GothamBold
 statsText.TextColor3 = Color3.fromRGB(220,150,255)
 
--- FIX 3: update mỗi 1 giây thay vì 60 lần/giây
-spawn(function()
+task.spawn(function()
 	while true do
 		statsText.Text =
 		"Ping: "..math.random(30,70).." ms\n"..
 		"Players: "..#Players:GetPlayers().."\n"..
 		"Time: "..Lighting.TimeOfDay
-		wait(1)
+		task.wait(1)
 	end
+end)
+
+--------------------------------------------------
+-- ADMIN PLAYER CONTROLS (FIX CONNECT + FLY)
+--------------------------------------------------
+local Admin = newPage()
+newTab("Admin",4,Admin)
+
+local selectedPlayer = nil
+
+local PlayerBox = Instance.new("TextBox",Admin)
+PlayerBox.Size = UDim2.new(0,200,0,35)
+PlayerBox.Position = UDim2.new(0,20,0,20)
+PlayerBox.PlaceholderText = "Enter Player Name"
+PlayerBox.Font = Enum.Font.GothamBold
+PlayerBox.TextScaled = true
+PlayerBox.BackgroundColor3 = Color3.fromRGB(60,60,60)
+PlayerBox.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner",PlayerBox)
+
+PlayerBox.FocusLost:Connect(function()
+	selectedPlayer = Players:FindFirstChild(PlayerBox.Text)
+end)
+
+makeBtn(Admin,"Teleport To Player",70,function()
+	if selectedPlayer and selectedPlayer.Character then
+		player.Character:PivotTo(selectedPlayer.Character:GetPivot())
+	end
+end)
+
+makeBtn(Admin,"Bring Player",120,function()
+	if selectedPlayer and selectedPlayer.Character then
+		selectedPlayer.Character:PivotTo(player.Character:GetPivot())
+	end
+end)
+
+makeBtn(Admin,"Spectate",170,function()
+	if selectedPlayer and selectedPlayer.Character then
+		workspace.CurrentCamera.CameraSubject =
+			selectedPlayer.Character:FindFirstChildOfClass("Humanoid")
+	end
+end)
+
+makeBtn(Admin,"Stop Spectate",220,function()
+	workspace.CurrentCamera.CameraSubject = hum()
+end)
+
+makeBtn(Admin,"Reset Character",270,function()
+	if selectedPlayer and selectedPlayer.Character then
+		selectedPlayer.Character:BreakJoints()
+	end
+end)
+
+-- FIX infinite jump không nhân đôi
+local infJump=false
+if _G.NezutJump then _G.NezutJump:Disconnect() end
+_G.NezutJump = UIS.JumpRequest:Connect(function()
+	if infJump then hum():ChangeState(Enum.HumanoidStateType.Jumping) end
+end)
+
+makeBtn(Admin,"Toggle Infinite Jump",320,function()
+	infJump = not infJump
+end)
+
+-- FIX fly không treo loop
+local flying=false
+makeBtn(Admin,"Toggle Fly",370,function()
+	flying = not flying
+	task.spawn(function()
+		while flying and player.Character do
+			RunService.RenderStepped:Wait()
+			player.Character:TranslateBy(hum().MoveDirection * 2)
+		end
+	end)
 end)
