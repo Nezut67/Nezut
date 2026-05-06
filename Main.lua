@@ -15,7 +15,10 @@ local THEMES = {
 	Light = Color3.fromRGB(220,220,220)
 }
 
-local gui = Instance.new("ScreenGui",player.PlayerGui)
+-- FIX 1: GUI không mất khi chết
+local gui = Instance.new("ScreenGui")
+gui.ResetOnSpawn = false
+gui.Parent = player.PlayerGui
 
 --------------------------------------------------
 -- 🌫️ 1️⃣ BLUR BACKGROUND (GLASS EFFECT)
@@ -41,7 +44,7 @@ Instance.new("UICorner",Toggle).CornerRadius = UDim.new(1,0)
 -- 🟣 MAIN HUB
 --------------------------------------------------
 local Main = Instance.new("Frame",gui)
-Main.Size = UDim2.new(0,0,0,0) -- animation start nhỏ
+Main.Size = UDim2.new(0,0,0,0)
 Main.Position = UDim2.new(0.5,-275,0.5,-190)
 Main.BackgroundColor3 = THEMES.Dark
 Main.Visible = false
@@ -135,7 +138,6 @@ local function newTab(name,pos,page)
 	end)
 end
 
--- PAGES
 local Home=newPage()
 local Player=newPage()
 local World=newPage()
@@ -176,8 +178,9 @@ label.TextScaled=true
 label.Font=Enum.Font.GothamBold
 label.TextColor3=Color3.fromRGB(220,150,255)
 
-RunService.RenderStepped:Connect(function()
-	local fps=math.floor(1/RunService.RenderStepped:Wait())
+-- FIX 2: FPS đúng & không tụt FPS
+RunService.RenderStepped:Connect(function(dt)
+	local fps=math.floor(1/dt)
 	label.Text="Welcome "..player.Name.."\\nFPS: "..fps
 end)
 
@@ -198,42 +201,15 @@ for name,color in pairs(THEMES) do
 	end)
 	y+=50
 end
---------------------------------------------------
--- 🟣 5️⃣ SIDEBAR NEON GLOW
---------------------------------------------------
-local sideGlow = Instance.new("UIStroke",Tabs)
-sideGlow.Color = Color3.fromRGB(170,0,255)
-sideGlow.Thickness = 1.5
-sideGlow.Transparency = 0.4
 
 --------------------------------------------------
--- ❌ 6️⃣ CLOSE BUTTON (góc phải)
---------------------------------------------------
-local Close = Instance.new("TextButton",Main)
-Close.Size = UDim2.new(0,35,0,35)
-Close.Position = UDim2.new(1,-40,0,5)
-Close.Text = "X"
-Close.Font = Enum.Font.GothamBlack
-Close.TextScaled = true
-Close.BackgroundColor3 = Color3.fromRGB(120,0,0)
-Close.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",Close)
-
-Close.MouseButton1Click:Connect(function()
-	Main.Visible = false
-end)
-
---------------------------------------------------
--- 📊 7️⃣ STATS PANEL (Home page)
+-- 📊 STATS PANEL
 --------------------------------------------------
 local StatsFrame = Instance.new("Frame",Home)
 StatsFrame.Size = UDim2.new(0,230,0,150)
 StatsFrame.Position = UDim2.new(1,-250,0,10)
 StatsFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
 Instance.new("UICorner",StatsFrame)
-
-local statsStroke = Instance.new("UIStroke",StatsFrame)
-statsStroke.Color = Color3.fromRGB(170,0,255)
 
 local statsText = Instance.new("TextLabel",StatsFrame)
 statsText.Size = UDim2.new(1,0,1,0)
@@ -242,104 +218,13 @@ statsText.TextScaled = true
 statsText.Font = Enum.Font.GothamBold
 statsText.TextColor3 = Color3.fromRGB(220,150,255)
 
-RunService.RenderStepped:Connect(function()
-	statsText.Text =
-	"Ping: "..math.random(30,70).." ms\n"..
-	"Players: "..#Players:GetPlayers().."\n"..
-	"Time: "..Lighting.TimeOfDay
-end)
-
---------------------------------------------------
--- ⚡ 8️⃣ QUICK ACTIONS PANEL
---------------------------------------------------
-local Quick = Instance.new("Frame",Home)
-Quick.Size = UDim2.new(1,-40,0,90)
-Quick.Position = UDim2.new(0,20,1,-100)
-Quick.BackgroundColor3 = Color3.fromRGB(35,35,35)
-Instance.new("UICorner",Quick)
-
-local quickStroke = Instance.new("UIStroke",Quick)
-quickStroke.Color = Color3.fromRGB(170,0,255)
-
-local function quickBtn(text,x,func)
-	local b=Instance.new("TextButton",Quick)
-	b.Size=UDim2.new(0,120,0,35)
-	b.Position=UDim2.new(0,x,0,25)
-	b.Text=text
-	b.Font=Enum.Font.GothamBold
-	b.TextScaled=true
-	b.BackgroundColor3=Color3.fromRGB(70,70,70)
-	b.TextColor3=Color3.new(1,1,1)
-	Instance.new("UICorner",b)
-	b.MouseButton1Click:Connect(func)
-end
-
-quickBtn("Rejoin",10,function()
-	game:GetService("TeleportService"):Teleport(game.PlaceId,player)
-end)
-
-quickBtn("Server Hop",140,function()
-	game:GetService("TeleportService"):Teleport(game.PlaceId)
-end)
-
-quickBtn("Copy JobID",270,function()
-	setclipboard(game.JobId)
-end)
-
---------------------------------------------------
--- ✨ 9️⃣ TAB HOVER EFFECT
---------------------------------------------------
-for _,btn in pairs(Tabs:GetChildren()) do
-	if btn:IsA("TextButton") then
-		btn.MouseEnter:Connect(function()
-			TweenService:Create(btn,TweenInfo.new(0.2),{
-				BackgroundColor3 = Color3.fromRGB(120,60,160)
-			}):Play()
-		end)
-		btn.MouseLeave:Connect(function()
-			TweenService:Create(btn,TweenInfo.new(0.2),{
-				BackgroundColor3 = Color3.fromRGB(60,60,60)
-			}):Play()
-		end)
-	end
-end
---------------------------------------------------
--- 🌈 11️⃣ RGB TITLE EFFECT
---------------------------------------------------
+-- FIX 3: update mỗi 1 giây thay vì 60 lần/giây
 spawn(function()
 	while true do
-		for i = 0,255,3 do
-			Title.TextColor3 = Color3.fromHSV(i/255,1,1)
-			wait()
-		end
-	end
-end)
---------------------------------------------------
--- 🎵 13️⃣ HUB MUSIC
---------------------------------------------------
-local music = Instance.new("Sound",gui)
-music.SoundId = "rbxassetid://1843529274"
-music.Volume = 0.3
-music.Looped = true
-music:Play()
---------------------------------------------------
--- ✨ 15️⃣ FLOATING PARTICLES
---------------------------------------------------
-spawn(function()
-	while true do
-		local p = Instance.new("Frame",Main)
-		p.Size = UDim2.new(0,4,0,4)
-		p.BackgroundColor3 = Color3.fromRGB(200,100,255)
-		p.Position = UDim2.new(math.random(),0,1,0)
-		p.BackgroundTransparency = 0.3
-		Instance.new("UICorner",p)
-
-		TweenService:Create(p,TweenInfo.new(3),{
-			Position = UDim2.new(math.random(),0,0,0),
-			BackgroundTransparency = 1
-		}):Play()
-
-		game.Debris:AddItem(p,3)
-		wait(0.15)
+		statsText.Text =
+		"Ping: "..math.random(30,70).." ms\n"..
+		"Players: "..#Players:GetPlayers().."\n"..
+		"Time: "..Lighting.TimeOfDay
+		wait(1)
 	end
 end)
